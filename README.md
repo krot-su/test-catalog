@@ -72,6 +72,8 @@ server {
 }
 ```
 
+Рабочие конфиги стенда https://aisnab.gmcloud.ru — в `deploy/`. Хостер стенда не пускает к Telegram по IPv4, а у контейнеров нет IPv6, поэтому бот ходит в Bot API через nginx хоста (`TELEGRAM_API_BASE=http://host.docker.internal:8086`, `deploy/host-nginx-telegram-relay.conf`): тот подключается по IPv6 и повторяет неудавшиеся подключения. На обычном сервере `TELEGRAM_API_BASE` оставьте пустым.
+
 В @BotFather кнопку Mini App настраивать не обязательно: бот сам ставит кнопку меню «Каталог» на `PUBLIC_URL`.
 
 Масштабирование:
@@ -101,6 +103,8 @@ backend/   FastAPI: app/api (роутеры, зависимости), service.py
 bot/       aiogram 3: handlers/, middlewares.py (дедупликация), api_client.py, main.py (webhook-сервер)
 web/       Next.js App Router: app/page.tsx (каталог), app/telegram-ready.tsx, lib/products.ts
 nginx/     балансировщик и раздача /media/
+deploy/    nginx хоста для стенда: TLS-сайт и прокси Bot API
+scripts/   smoke-test.sh — проверка поднятого стека (реплики, идемпотентность, медиа, балансировка, отказ реплики)
 ```
 
 ## Что можно развить
