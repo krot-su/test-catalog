@@ -10,7 +10,7 @@ from aiogram.client.telegram import TelegramAPIServer
 from aiogram.enums import ParseMode
 from aiogram.exceptions import TelegramRetryAfter
 from aiogram.fsm.storage.redis import RedisStorage
-from aiogram.types import MenuButtonWebApp, WebAppInfo
+from aiogram.types import BotCommand, BotCommandScopeChat, MenuButtonWebApp, WebAppInfo
 from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
 from aiohttp import web
 from redis.asyncio import Redis
@@ -54,6 +54,21 @@ async def on_startup(bot: Bot, dispatcher: Dispatcher, settings: Settings) -> No
             menu_button=MenuButtonWebApp(text="Каталог", web_app=WebAppInfo(url=settings.webapp_url))
         )
     )
+    # The Mini App menu button hides the command list, so "/" suggestions are the way back to /start.
+    await call_with_flood_retry(
+        lambda: bot.set_my_commands([BotCommand(command="start", description="Каталог товаров")])
+    )
+    admin_commands = [
+        BotCommand(command="start", description="Каталог товаров"),
+        BotCommand(command="create", description="Создать товар"),
+        BotCommand(command="cancel", description="Отменить создание товара"),
+    ]
+    for admin_id in settings.admin_id_set:
+        await call_with_flood_retry(
+            lambda admin_id=admin_id: bot.set_my_commands(
+                admin_commands, scope=BotCommandScopeChat(chat_id=admin_id)
+            )
+        )
     log.info("Webhook is set to %s", settings.webhook_url)
 
 
