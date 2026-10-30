@@ -55,6 +55,15 @@ echo "OK: catalog page lists the new product"
 [ "$(http_code "$BASE_URL/media/")" = 404 ] || fail "bucket listing is exposed"
 echo "OK: write access and bucket listing are closed"
 
+since="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+sleep 1
+for _ in $(seq 20); do curl -fsS "$BASE_URL/api/products?limit=1" >/dev/null; done
+for container in $(docker compose ps -q api); do
+  served="$(docker logs --since "$since" "$container" 2>&1 | grep -c 'GET /api/products?limit=1' || true)"
+  [ "$served" -ge 1 ] || fail "api replica ${container:0:12} received no requests from nginx"
+  echo "OK: api replica ${container:0:12} served $served of 20 requests"
+done
+
 if [ "${CHECK_FAILOVER:-0}" = 1 ]; then
   docker stop "$(docker compose ps -q api | head -n1)" >/dev/null
   for _ in $(seq 10); do
