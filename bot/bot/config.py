@@ -14,6 +14,8 @@ class Settings(BaseSettings):
     redis_url: str
     api_base_url: str
     internal_api_token: SecretStr
+    # Empty: https://api.telegram.org. Set when the host must relay Bot API traffic (e.g. IPv6-only route).
+    telegram_api_base: str = ""
 
     @property
     def admin_id_set(self) -> frozenset[int]:

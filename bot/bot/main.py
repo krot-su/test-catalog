@@ -5,6 +5,8 @@ from collections.abc import Awaitable, Callable
 import aiohttp
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
+from aiogram.client.session.aiohttp import AiohttpSession
+from aiogram.client.telegram import TelegramAPIServer
 from aiogram.enums import ParseMode
 from aiogram.exceptions import TelegramRetryAfter
 from aiogram.fsm.storage.redis import RedisStorage
@@ -67,8 +69,12 @@ def main() -> None:
     logging.basicConfig(level=logging.INFO)
     settings = Settings()
 
+    session = None
+    if settings.telegram_api_base:
+        session = AiohttpSession(api=TelegramAPIServer.from_base(settings.telegram_api_base))
     bot = Bot(
         settings.bot_token.get_secret_value(),
+        session=session,
         default=DefaultBotProperties(parse_mode=ParseMode.HTML),
     )
     redis = Redis.from_url(settings.redis_url)
